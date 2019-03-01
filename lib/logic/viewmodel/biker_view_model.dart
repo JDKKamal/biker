@@ -10,14 +10,24 @@ import 'package:biker/services/abstract/api_service.dart';
 import 'package:biker/services/network_service_response.dart';
 import 'package:meta/meta.dart';
 
-class UserLoginViewModel {
-  String userId, phoneNumber, password;
+class BikerViewModel {
+  String userId, phoneNumber, password, title, reasonName, lonerPhone, selectReason, inquiryNo, selectDate, selectTime;
   NetworkServiceResponse apiResult;
   APIService apiService = new Injector().otpService;
 
-  UserLoginViewModel.pickUp({@required this.userId});
+  BikerViewModel.delivery();
 
-  UserLoginViewModel.login({@required this.phoneNumber, @required this.password});
+  BikerViewModel.deliveryOption({
+    @required this.title,
+    @required this.reasonName,
+    this.lonerPhone,
+    @required this.inquiryNo,
+    @required this.selectReason,
+    this.selectDate,
+    this.selectTime
+  });
+
+  BikerViewModel.login({@required this.phoneNumber, @required this.password});
 
   Future<Null> getLogin(String phoneNumber, String password) async {
     NetworkServiceResponse<LoginResponse> result =
@@ -40,6 +50,23 @@ class UserLoginViewModel {
   Future<Null> getPostPone(String userId) async {
     NetworkServiceResponse<List<PostPoneResponse>> result =
     await apiService.postpone(userId);
+    this.apiResult = result;
+  }
+
+  Future<Null> getUndeliveredReasonList() async {
+    NetworkServiceResponse<List<ReasonResponse>> result =
+    await apiService.undeliveredReasonList();
+    this.apiResult = result;
+  }
+
+  Future<Null> getPostPonCancelReasonList() async {
+    NetworkServiceResponse<List<ReasonResponse>> result =
+    await apiService.postPonCancelReasonList();
+    this.apiResult = result;
+  }
+
+  Future<Null> getPostPoneCancelReason(Map<String, dynamic> postPoneCancelReasonBody, String title, String reasonName) async {
+    NetworkServiceResponse result = await apiService.postPoneCancelReason(postPoneCancelReasonBody, title, reasonName);
     this.apiResult = result;
   }
 }

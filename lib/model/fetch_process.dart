@@ -1,12 +1,12 @@
 import 'package:biker/services/network_service_response.dart';
 
-enum ApiType { performLogin, performPickUp, performDispatch, performPostPone, performReasonUndelivered, performReasonPostPoneCancel }
+enum ApiType { performLogin, performPickUp, performDispatch, performPostPone, performUndeliveredReasonList, performPostPoneCancelReasonList, performPostPoneCancelReason }
 
 class FetchProcess<T> {
   ApiType type;
-  bool loading;
+  int loadingStatus = 0;
   int statusCode = 0;
-  NetworkServiceResponse<T> response;
+  NetworkServiceResponse<T> networkServiceResponse;
 
-  FetchProcess({this.loading, this.statusCode, this.response, this.type});
+  FetchProcess({this.loadingStatus, this.statusCode, this.networkServiceResponse, this.type});
 }

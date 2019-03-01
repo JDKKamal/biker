@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:biker/logic/bloc/dispatch_bloc.dart';
-import 'package:biker/logic/viewmodel/user_login_view_model.dart';
+import 'package:biker/logic/viewmodel/biker_view_model.dart';
 import 'package:biker/model/dispatch/dispatch_response.dart';
 import 'package:biker/model/fetch_process.dart';
 import 'package:biker/services/network/api_subscription.dart';
@@ -17,7 +17,7 @@ class TabDispatchPage extends StatefulWidget {
 }
 
 class _TabDispatchPageState extends State<TabDispatchPage> {
-  int position;
+  String position;
   DispatchBloc dispatchBloc;
 
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = new GlobalKey<RefreshIndicatorState>();
@@ -27,30 +27,30 @@ class _TabDispatchPageState extends State<TabDispatchPage> {
     super.initState();
 
     dispatchBloc = new DispatchBloc();
-    apiSubscription(dispatchBloc.dispatchResult, context);
+    apiSubscription(dispatchBloc.dispatchListResult, context);
+    apiSubscription(dispatchBloc.dispatchDoneResult, context);
 
-    dispatchBloc.dispatchSink.add(UserLoginViewModel.pickUp(userId: "1"));
+    dispatchBloc.dispatchListSink.add(BikerViewModel.delivery());
   }
 
   Future<void> _onRefresh() async {
     new Timer(new Duration(seconds: 3), () {
-      setState(() {
-      });
+
     });
   }
 
   @override
   void dispose() {
-    super.dispose();
+    if (this.mounted) super.dispose();
   }
 
   bodyData() {
     return StreamBuilder<FetchProcess>(
-        stream: dispatchBloc.dispatchResult,
+        stream: dispatchBloc.dispatchListResult,
         builder: (context, snapshot) {
           return snapshot.hasData
-              ? snapshot.data.statusCode == 200 ?  _bodyList(snapshot.data.response.content) : Container()
-              : Center(child: CircularProgressIndicator());
+              ? snapshot.data.statusCode == UIData.resCode200 ?  _bodyList(snapshot.data.networkServiceResponse.response) : Container()
+              : Container();
         });
   }
 
@@ -66,7 +66,7 @@ class _TabDispatchPageState extends State<TabDispatchPage> {
                   color: Theme.of(context).cardColor,
                   shape: RoundedRectangleBorder //RoundedRectangleBorder, BeveledRectangleBorder, StadiumBorder select any oneL̥
                     (
-                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(10.0)),
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(10.0), top: Radius.circular(2.0)),
                   ),
                   child: new Column(
                     mainAxisSize: MainAxisSize.min,
@@ -101,6 +101,7 @@ class _TabDispatchPageState extends State<TabDispatchPage> {
                               child: new Text('${UIData.btnPostpone}',
                                   style: new TextStyle(fontSize: 12.0)),
                               onPressed: () {
+                                this.position = dispatchList[position].jobId;
                                 _navigateAndDisplayPostPone(context,
                                     dispatchList[position], position);
                               }),
@@ -111,6 +112,7 @@ class _TabDispatchPageState extends State<TabDispatchPage> {
                               child: new Text('${UIData.btnUndelivered}',
                                   style: new TextStyle(fontSize: 12.0)),
                               onPressed: () async {
+                                this.position = dispatchList[position].jobId;
                                 _navigateAndDisplayUndelivered(dispatchList[position], position);
                               }),
                         ],
@@ -141,40 +143,54 @@ class _TabDispatchPageState extends State<TabDispatchPage> {
                               mainAxisAlignment:
                               MainAxisAlignment.spaceEvenly,
                               children: <Widget>[
-                                FloatingActionButton.extended(
-                                  elevation: 4.0,
-                                  backgroundColor: Colors.white,
-                                  icon: Icon(
-                                      dispatchResponse.lonerPhone == 0
-                                          ? Icons.done
-                                          : Icons.phone_android,
-                                      color: dispatchResponse.lonerPhone == 0
-                                          ? Colors.red
-                                          : Colors.orangeAccent),
-                                  label: Text(
-                                    dispatchResponse.lonerPhone == 0
-                                        ? '${UIData.labelNoLoner}'
-                                        :  '${UIData.labelLoner}',
-                                    style: new TextStyle(
-                                        fontFamily: 'Quicksand',
-                                        fontSize: 15.0,
-                                        color: dispatchResponse.lonerPhone == 0
-                                            ? Colors.red
-                                            : Colors.orangeAccent,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.pop(context);
+                                Column(
+                                  children: <Widget>[
+                                    Container(
+                                      child: StreamBuilder<FetchProcess>(
+                                        stream: dispatchBloc.dispatchDoneResult,
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasData) {
 
-                                    if (dispatchResponse.lonerPhone == 1) {
-                                      this.position = position;
+                                          }
+                                          else if (snapshot.hasError) {
 
-                                    } else {
-                                      this.position = position;
-
-                                    }
-                                  },
-                                )
+                                          }
+                                          return FloatingActionButton.extended(
+                                            elevation: 4.0,
+                                            backgroundColor: Colors.white,
+                                            icon: Icon(
+                                                dispatchResponse.lonerPhone == 0
+                                                    ? Icons.block
+                                                    : Icons.phone_android,
+                                                color: dispatchResponse.lonerPhone == 0
+                                                    ? Colors.red
+                                                    : Colors.orangeAccent),
+                                            label: Text(
+                                              dispatchResponse.lonerPhone == 0
+                                                  ? '${UIData.labelNoLoner}'
+                                                  :  '${UIData.labelLoner}',
+                                              style: new TextStyle(
+                                                  fontFamily: 'Quicksand',
+                                                  fontSize: 15.0,
+                                                  color: dispatchResponse.lonerPhone == 0
+                                                      ? Colors.red
+                                                      : Colors.orangeAccent,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            onPressed: () {
+                                              dispatchBloc.dispatchDoneSink.add(
+                                                  BikerViewModel.deliveryOption(
+                                                      title: UIData.tabDispatch,
+                                                      lonerPhone: dispatchResponse.lonerPhone==1?'1':'0',
+                                                      reasonName: UIData.btnDone,
+                                                      inquiryNo: dispatchResponse.jobId.toString()));
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ])
                         ],
                       ),
@@ -256,9 +272,8 @@ class _TabDispatchPageState extends State<TabDispatchPage> {
 
     //RETURN DATA postpone_cancel_reason.dart
     if (result != null) {
-      setState(() {
-        position = 0;
-      });
+      dispatchBloc.dispatchRemove(this.position);
+      this.position = null;
     }
   }
 
@@ -275,10 +290,8 @@ class _TabDispatchPageState extends State<TabDispatchPage> {
 
     //RETURN DATA postpone_cancel_reason.dart
     if (result != null) {
-      setState(() {
-        //dispatchResponse.removeAt(int.parse(result));
-        position = 0;
-      });
+      dispatchBloc.dispatchRemove(this.position);
+      this.position = null;
     }
   }
 

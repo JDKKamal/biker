@@ -19,6 +19,11 @@ class ContactWidgetState extends State<ContactWidget> {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
         child: Card(
+          //RoundedRectangleBorder, BeveledRectangleBorder, StadiumBorder
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(10.0), top: Radius.circular(2.0)),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(10.0),
             child: Column(

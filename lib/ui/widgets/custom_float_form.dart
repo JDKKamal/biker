@@ -17,13 +17,13 @@ class CustomFloatForm extends StatelessWidget {
       onPressed: qrCallback,
       child: Ink(
         decoration: new BoxDecoration(
-            gradient: new LinearGradient(colors: UIData.kitGradients)),
+            gradient: new LinearGradient(colors: UIData.gradientsButton)),
         child: Stack(
           fit: StackFit.expand,
           children: <Widget>[
             Icon(
               icon,
-              color: Colors.white,
+              color: Colors.orangeAccent,
             )
           ],
         ),

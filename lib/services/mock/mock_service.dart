@@ -20,9 +20,9 @@ class MockService implements APIService {
   Future<NetworkServiceResponse<LoginResponse>> login(String phoneNumber, String password) async {
     await Future.delayed(Duration(seconds: 2));
     return Future.value(NetworkServiceResponse(
-        responseCode: 200,
-        content:  LoginResponse(
-          empId: 123,
+        responseCode: UIData.resCode200,
+        response:  LoginResponse(
+          empId: 000,
           empName: 'Lakhani kamlesh',
           empMobile: '9586331823',
           message:  UIData.msgLoginSuccessfully,
@@ -33,52 +33,58 @@ class MockService implements APIService {
   @override
   Future<NetworkServiceResponse<List<DispatchResponse>>> dispatch(String userID) {
     final _dispatchVM = DispatchViewModel();
-
     return Future.value(NetworkServiceResponse(
-        responseCode: 200,
-        content: _dispatchVM.getDispatch(),
+        responseCode: UIData.resCode200,
+        response: _dispatchVM.getDispatch(),
         message: UIData.get_data));
   }
 
   @override
   Future<NetworkServiceResponse<List<PostPoneResponse>>> postpone(String userID) {
     final _postPoneVM = PostPoneViewModel();
-
     return Future.value(NetworkServiceResponse(
-        responseCode: 200,
-        content: _postPoneVM.getPostPone(),
+        responseCode: UIData.resCode200,
+        response: _postPoneVM.getPostPone(),
         message: UIData.get_data));
   }
 
   @override
-  Future<NetworkServiceResponse<List<ReasonResponse>>> reasonUndelivered() {
+  Future<NetworkServiceResponse<List<ReasonResponse>>> undeliveredReasonList() async{
+   // await Future.delayed(Duration(seconds: 2));
     final _reasonUndeliveredVM = ReasonUndeliveredViewModel();
-
     return Future.value(NetworkServiceResponse(
-        responseCode: 200,
-        content: _reasonUndeliveredVM.getReasonUndelivered(),
+        responseCode: UIData.resCode200,
+        response: _reasonUndeliveredVM.getReasonUndelivered(),
         message: UIData.get_data));
   }
 
   @override
-  Future<NetworkServiceResponse<List<ReasonResponse>>> reasonPostPonCancel() {
+  Future<NetworkServiceResponse<List<ReasonResponse>>> postPonCancelReasonList() async{
+   // await Future.delayed(Duration(seconds: 2));
     final _reasonPostPoneCancelVM = ReasonPostPoneCancelViewModel();
-
     return Future.value(NetworkServiceResponse(
-        responseCode: 200,
-        content: _reasonPostPoneCancelVM.getReasonPostPoneCancel(),
+        responseCode: UIData.resCode200,
+        response: _reasonPostPoneCancelVM.getReasonPostPoneCancel(),
         message: UIData.get_data));
   }
 
   @override
   Future<NetworkServiceResponse<List<PickUpResponse>>> pickUp(String userID) {
-    //await Future.delayed(Duration(seconds: 2));
     final _pickUpVM = PickUpViewModel();
-
     return Future.value(NetworkServiceResponse(
-        responseCode: 200,
-        content: _pickUpVM.getPickUp(),
+        responseCode: UIData.resCode200,
+        response: _pickUpVM.getPickUp(),
         message: UIData.get_data));
+  }
+
+  @override
+  Future<NetworkServiceResponse> postPoneCancelReason(Map<String, dynamic> postPoneCancelReasonBody, String title, String reasonName) async{
+    await Future.delayed(Duration(seconds: 2));
+    print("Tag" + postPoneCancelReasonBody.toString() +' - '+ title +' - '+ reasonName);
+    return Future.value(NetworkServiceResponse(
+        responseCode: UIData.resCode200,
+        response: null,
+        message: title +' '+ reasonName.toLowerCase() + ' successfull'));
   }
 }
 

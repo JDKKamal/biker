@@ -1,9 +1,11 @@
 import 'package:biker/logic/bloc/reason_postpone_cancel_bloc.dart';
-import 'package:biker/logic/viewmodel/user_login_view_model.dart';
+import 'package:biker/logic/viewmodel/biker_view_model.dart';
 import 'package:biker/model/fetch_process.dart';
 import 'package:biker/model/reason/reason.dart';
 import 'package:biker/services/network/api_subscription.dart';
+import 'package:biker/ui/widgets/common_dialogs.dart';
 import 'package:biker/ui/widgets/common_scaffold.dart';
+import 'package:biker/ui/widgets/custom_float_form.dart';
 import 'package:biker/utils/uidata.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -42,9 +44,11 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
     time24Hour = time12Add.toString() + ":" + DateFormat('mm').format(nowTime);
 
     reasonPostPoneCancelBloc = new ReasonPostPoneCancelBloc();
-    apiSubscription(reasonPostPoneCancelBloc.reasonPostPoneCancelResult, context);
+    apiSubscription(
+        reasonPostPoneCancelBloc.reasonPostPoneCancelListResult, context);
 
-    reasonPostPoneCancelBloc.reasonPostPoneCancelSink.add(UserLoginViewModel.pickUp(userId: "1"));
+    reasonPostPoneCancelBloc.reasonPostPoneCancelListSink.add(
+        BikerViewModel.delivery());
   }
 
   @override
@@ -112,10 +116,11 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
 
   bodyData() {
     return StreamBuilder<FetchProcess>(
-        stream: reasonPostPoneCancelBloc.reasonPostPoneCancelResult,
+        stream: reasonPostPoneCancelBloc.reasonPostPoneCancelListResult,
         builder: (context, snapshot) {
           return snapshot.hasData
-              ?snapshot.data.statusCode == 200 ?  bodyList(snapshot.data.response.content) : Container()
+              ? snapshot.data.statusCode == UIData.resCode200 ? bodyList(
+              snapshot.data.networkServiceResponse.response) : Container()
               : Center(child: CircularProgressIndicator());
         });
   }
@@ -124,7 +129,7 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
       Column(
         children: <Widget>[
           titleHeader(),
-          dateTimePicker(),
+          widget.reasonName == UIData.btnCancel? Container() : dateTimePicker(),
           new Expanded(
             child: new ListView.builder(
               physics: const BouncingScrollPhysics(),
@@ -134,8 +139,8 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
                   splashColor: Colors.black12,
                   onTap: () {
                     setState(() {
-                      reasonList
-                          .forEach((element) => element.isSelected = false);
+                      reasonList.forEach((element) =>
+                      element.isSelected = false);
                       reasonList[index].isSelected = true;
 
                       reasonDescription = reasonList[index].reasonName;
@@ -147,24 +152,36 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
             ),
           ),
           Container(
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: FlatButton.icon(
-                    icon: const Icon(
-                      Icons.check_circle,
-                      size: 28.0,
-                      color: Colors.orangeAccent,
+              child: Container(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: StreamBuilder<FetchProcess>(
+                      stream: reasonPostPoneCancelBloc
+                          .postPoneCancelReasonResult,
+                      builder: (context, snapshot) {
+                        return CustomFloatForm(
+                          icon: Icons.done,
+                          isMini: true,
+                          qrCallback: () {
+                            if (reasonDescription != null) {
+                              apiSubscription(reasonPostPoneCancelBloc.postPoneCancelReasonResult, context);
+                              reasonPostPoneCancelBloc.postPoneCancelReasonSink.add(
+                                  BikerViewModel.deliveryOption(
+                                      title: widget.title,
+                                      reasonName: widget.reasonName,
+                                      selectReason: reasonDescription,
+                                      inquiryNo: widget.id,
+                                      selectDate: formattedDate,
+                                      selectTime: time24Hour));
+                            }
+                            else {
+                              toast('${UIData.labelSelect1Reason}');
+                            }
+                          },
+                        );
+                      },
                     ),
-                    label: const Text('${UIData.btnSubmit}',
-                        style: TextStyle(
-                            fontSize: 15.0,
-                            color: Colors.orangeAccent,
-                            fontFamily: 'Quicksand',
-                            fontWeight: FontWeight.bold)),
-                    onPressed: () async {
-
-                    }),
-              )),
+                  ))),
         ],
       );
 
@@ -189,7 +206,8 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
                         child: Text(
                           '${UIData.labelSelectDate}',
                           style: new TextStyle(
-                              fontSize: 16.0, color: Colors.orange),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.0, color: Colors.grey),
                         ),
                       ),
                     ),
@@ -198,7 +216,7 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
                       child: Text(
                         formattedDate,
                         style:
-                        new TextStyle(fontSize: 12.0, color: Colors.grey),
+                        new TextStyle(fontSize: 12.0, color: Colors.orange),
                       ),
                     ),
                   ],
@@ -217,7 +235,8 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
                         child: Text(
                           '${UIData.labelSelectTime}',
                           style: new TextStyle(
-                              fontSize: 16.0, color: Colors.orange),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.0, color: Colors.grey),
                         ),
                       ),
                     ),
@@ -226,7 +245,7 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
                       child: Text(
                         patternTime,
                         style:
-                        new TextStyle(fontSize: 12.0, color: Colors.grey),
+                        new TextStyle(fontSize: 12.0, color: Colors.orange),
                       ),
                     ),
                   ],
@@ -239,17 +258,17 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
                       children: <Widget>[
                         new Padding(
                           padding:
-                          const EdgeInsets.only(top: 10.0, bottom: 0.0),
+                          const EdgeInsets.only(top: 30.0, bottom: 0.0),
                           child: Text(
-                            '${UIData.labelSelectReason}',
+                            '${UIData.labelSelectReason}' + widget.reasonName.toLowerCase(),
                             style: new TextStyle(
                                 fontSize: 15.0,
-                                color: Colors.orange,
+                                color: Colors.grey,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
                         new Container(
-                          color: Colors.orange,
+                          color: Colors.grey,
                           width: 24.0,
                           height: 1.5,
                         ),
@@ -282,7 +301,7 @@ class _PostPoneReasonCancelPageState extends State<PostPoneCancelReasonPage> {
             widget.reasonName,
             style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color: Colors.black,
+                color: Colors.black54,
                 fontSize: 22.0),
           ),
           SizedBox(
@@ -307,6 +326,11 @@ class ReasonItem extends StatelessWidget {
       child: new Row(
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
+          new Container(
+            child:  Icon( reasonResponse.isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                color: reasonResponse.isSelected ? Colors.orange : Colors.black),
+          ),
+
           /*new Container(
             height: 25.0,
             width: 34.0,
@@ -326,11 +350,11 @@ class ReasonItem extends StatelessWidget {
             ),
           ),*/
           new Container(
-            //margin: new EdgeInsets.only(left: 10.0),
+            margin: new EdgeInsets.only(left: 10.0),
             child: new Text(reasonResponse.reasonName,
                 style: new TextStyle(
                   fontSize: 13,
-                  color: reasonResponse.isSelected ? Colors.black : Colors.grey,
+                  color: reasonResponse.isSelected ? Colors.orange : Colors.black,
                 )),
           )
         ],

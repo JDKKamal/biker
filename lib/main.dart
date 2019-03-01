@@ -11,7 +11,7 @@ import 'package:biker/utils/translations.dart';
 import 'package:biker/utils/uidata.dart';
 
 void main() {
-  Injector.configure(Flavor.Network);
+  Injector.configure(Flavor.Testing);
   runApp(MyApp());
 }
 

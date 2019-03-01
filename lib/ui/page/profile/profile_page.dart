@@ -71,9 +71,9 @@ class _ProfilePageState extends State<ProfilePage>
                         left: 15.0,
                         right: 15.0,
                         child: Material(
-                          elevation: 3.0,
+                          elevation: 1.0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.0)),
+                            borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.0), top: Radius.circular(2.0)),
                           ),
                           child: Container(
                             height: 150.0,
@@ -165,7 +165,7 @@ class _ProfilePageState extends State<ProfilePage>
                         ),
                       ),
                     ],
-                  ) : Center(child: CircularProgressIndicator());
+                  ) : Container();
                 })
           ],
         ));

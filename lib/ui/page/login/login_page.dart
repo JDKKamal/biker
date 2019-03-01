@@ -1,8 +1,8 @@
 import 'dart:async';
 
+import 'package:biker/logic/viewmodel/biker_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:biker/logic/bloc/login_bloc.dart';
-import 'package:biker/logic/viewmodel/user_login_view_model.dart';
 import 'package:biker/model/fetch_process.dart';
 import 'package:biker/services/network/api_subscription.dart';
 import 'package:biker/ui/widgets/background_clipper.dart';
@@ -267,7 +267,7 @@ class _LoginPageState extends State<LoginPage> {
     if (_key.currentState.validate()) {
       _key.currentState.save();
 
-      loginBloc.loginSink.add(UserLoginViewModel.login(
+      loginBloc.loginSink.add(BikerViewModel.login(
           phoneNumber: mobile.replaceAll(" ", ""),
           password: password));
     } else {

@@ -238,7 +238,6 @@ new Row(
 buttonTextStyle(String btnName) => new Text(btnName,
     style: new TextStyle(fontSize: 12.0));
 
-//TODO CUSTOM
 expandStyle(int flex, Widget child) => Expanded(
     flex: flex,
     child: child);

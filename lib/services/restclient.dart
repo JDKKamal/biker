@@ -9,12 +9,24 @@ class RestClient {
       var response = await http.get(url, headers: headers);
       return processResponse<T>(response);
     }
-    catch(e)
-    {
+    catch(e) {
       return new MappedNetworkServiceResponse<T>(
           networkServiceResponse: new NetworkServiceResponse<T>(
               responseCode: 0,
-              message: "${"Internal server error"}"));
+              message: 'Internal server error'));
+    }
+  }
+
+  Future<MappedNetworkServiceResponse<T>> post<T>(String url, {Map headers, body, encoding}) async{
+    try {
+      var response = await http.post(url, headers: headers, body: body, encoding: encoding);
+      return processResponse<T>(response);
+    }
+    catch(e) {
+      return new MappedNetworkServiceResponse<T>(
+          networkServiceResponse: new NetworkServiceResponse<T>(
+              responseCode: 0,
+              message: 'Internal server error'));
     }
   }
 
@@ -23,7 +35,7 @@ class RestClient {
       return new MappedNetworkServiceResponse<T>(
           networkServiceResponse: new NetworkServiceResponse<T>(
               responseCode: response.statusCode,
-              message: "(${response.statusCode}) ${response.body}"));
+              message: '(${response.statusCode}) ${response.body}'));
     } else {
       return new MappedNetworkServiceResponse<T>(
           mappedResult: response.body,

@@ -1,15 +1,16 @@
 import 'dart:async';
+import 'package:biker/logic/viewmodel/biker_view_model.dart';
+import 'package:biker/utils/uidata.dart';
 import 'package:intl/intl.dart';
-import 'package:biker/logic/viewmodel/user_login_view_model.dart';
 import 'package:biker/model/fetch_process.dart';
 import 'package:biker/model/login/login_response.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginBloc {
-  final loginController = StreamController<UserLoginViewModel>();
+  final loginController = StreamController<BikerViewModel>();
 
-  Sink<UserLoginViewModel> get loginSink => loginController.sink;
+  Sink<BikerViewModel> get loginSink => loginController.sink;
   final apiController = BehaviorSubject<FetchProcess>();
 
   Stream<FetchProcess> get apiResult => apiController.stream;
@@ -18,22 +19,21 @@ class LoginBloc {
     loginController.stream.listen(apiCall);
   }
 
-  void apiCall(UserLoginViewModel userLogin) async {
-    FetchProcess process = new FetchProcess(loading: true); //loading
+  void apiCall(BikerViewModel bikerViewModel) async {
+    FetchProcess process = new FetchProcess(loadingStatus: 1); //loading
     apiController.add(process);
 
-    await userLogin.getLogin(userLogin.phoneNumber, userLogin.password);
+    await bikerViewModel.getLogin(bikerViewModel.phoneNumber, bikerViewModel.password);
     process.type = ApiType.performLogin;
 
-    process.loading = false;
-    process.response = userLogin.apiResult;
-    process.statusCode = userLogin.apiResult.responseCode;
+    process.loadingStatus = 2;
+    process.networkServiceResponse = bikerViewModel.apiResult;
+    process.statusCode = bikerViewModel.apiResult.responseCode;
 
-    if (process.statusCode == 200) {
-      LoginResponse loginResponse = process.response.content;
+    if (process.statusCode == UIData.resCode200) {
+      LoginResponse loginResponse = process.networkServiceResponse.response;
       DateTime nowDateTime = DateTime.now();
-      String patternDateTime =
-          DateFormat('yyyy-MM-dd kk:mm a').format(nowDateTime);
+      String patternDateTime = DateFormat('yyyy-MM-dd kk:mm a').format(nowDateTime);
 
       var sharedPreferences = await SharedPreferences.getInstance();
       sharedPreferences.setString('profile', "");
@@ -43,9 +43,9 @@ class LoginBloc {
       sharedPreferences.setInt('id', loginResponse.empId);
       sharedPreferences.setString('loginTime', patternDateTime);
     }
-    //FOR ERROR DIALOG
+
     apiController.add(process);
-    userLogin = null;
+    bikerViewModel = null;
   }
 
   void dispose() {

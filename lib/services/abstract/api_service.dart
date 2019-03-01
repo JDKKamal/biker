@@ -12,6 +12,8 @@ abstract class APIService {
   Future<NetworkServiceResponse<List<PickUpResponse>>> pickUp(String userID);
   Future<NetworkServiceResponse<List<DispatchResponse>>> dispatch(String userID);
   Future<NetworkServiceResponse<List<PostPoneResponse>>> postpone(String userID);
-  Future<NetworkServiceResponse<List<ReasonResponse>>> reasonUndelivered();
-  Future<NetworkServiceResponse<List<ReasonResponse>>> reasonPostPonCancel();
+  Future<NetworkServiceResponse<List<ReasonResponse>>> undeliveredReasonList();
+  Future<NetworkServiceResponse<List<ReasonResponse>>> postPonCancelReasonList();
+
+  Future<NetworkServiceResponse> postPoneCancelReason(Map<String, dynamic> postPoneCancelReasonBody, String title, String reasonName);
 }

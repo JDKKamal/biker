@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:biker/logic/bloc/pick_up_bloc.dart';
-import 'package:biker/logic/viewmodel/user_login_view_model.dart';
+import 'package:biker/logic/viewmodel/biker_view_model.dart';
 import 'package:biker/model/fetch_process.dart';
 import 'package:biker/model/pickup/pickup_response.dart';
 import 'package:biker/services/network/api_subscription.dart';
 import 'package:biker/ui/page/tab/delivery_row.dart';
 import 'package:biker/ui/page/tab/postpone_cancel_reason.dart';
+import 'package:biker/ui/widgets/common_dialogs.dart';
 import 'package:biker/ui/widgets/profile_tile.dart';
 import 'package:biker/utils/uidata.dart';
 import 'package:flutter/material.dart';
@@ -27,27 +28,26 @@ class _TabPickUpPageState extends State<TabPickUpPage> {
     super.initState();
 
     pickUpBloc = new PickUpBloc();
-    apiSubscription(pickUpBloc.pickUpResult, context);
+    apiSubscription(pickUpBloc.pickUpListResult, context);
+    apiSubscription(pickUpBloc.pickUpDoneBehaviorSubject, context);
 
-    pickUpBloc.pickUpSink.add(UserLoginViewModel.pickUp(userId: "1"));
+    pickUpBloc.pickUpListSink.add(BikerViewModel.delivery());
   }
 
   Future<void> _onRefresh() async {
     new Timer(new Duration(seconds: 3), () {
-      setState(() {
-
-      });
+      pickUpBloc.pickUpListSink.add(BikerViewModel.delivery());
     });
   }
 
   bodyData() {
     return StreamBuilder<FetchProcess>(
-        stream: pickUpBloc.pickUpResult,
-        builder: (context, snapshot) {
+        stream: pickUpBloc.pickUpListResult,
+         builder: (context, snapshot) {
           return snapshot.hasData
-              ? snapshot.data.statusCode == 200 ?  _bodyList(snapshot.data.response.content) : Container()
-              : Center(child: CircularProgressIndicator());
-        });
+              ? snapshot.data.statusCode == UIData.resCode200 ?  _bodyList(snapshot.data.networkServiceResponse.response) : Container()
+              : Container();
+         });
   }
 
   Widget _bodyList(List<PickUpResponse> pickUpList) {
@@ -65,7 +65,7 @@ class _TabPickUpPageState extends State<TabPickUpPage> {
                 //RoundedRectangleBorder, BeveledRectangleBorder, StadiumBorder
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(10.0)),
+                      bottom: Radius.circular(10.0), top: Radius.circular(2.0)),
                 ),
                 child: new Column(
                   mainAxisSize: MainAxisSize.min,
@@ -99,6 +99,7 @@ class _TabPickUpPageState extends State<TabPickUpPage> {
                             textColor: Colors.brown,
                             child: buttonTextStyle('${UIData.btnPostpone}'),
                             onPressed: () {
+                              this.position = pickUpList[position].inquiryNo;
                               _navigateAndDisplayPostPoneCancel(
                                   '${UIData.tabPickUp}',
                                   '${UIData.btnPostpone}',
@@ -111,6 +112,7 @@ class _TabPickUpPageState extends State<TabPickUpPage> {
                             textColor: Colors.red,
                             child: buttonTextStyle('${UIData.btnCancel}'),
                             onPressed: () {
+                              this.position = pickUpList[position].inquiryNo;
                               _navigateAndDisplayPostPoneCancel(
                                   '${UIData.tabPickUp}',
                                   '${UIData.btnCancel}',
@@ -134,6 +136,11 @@ class _TabPickUpPageState extends State<TabPickUpPage> {
   @override
   void dispose() {
     if (this.mounted) super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   goToDonePickUp(PickUpResponse pickUpMain, int position) {
@@ -168,7 +175,8 @@ class _TabPickUpPageState extends State<TabPickUpPage> {
                                           onPressed: () {
                                             Navigator.pop(context);
                                           },
-                                        ))
+                                        ),
+                                    )
                                   ]))
                         ],
                       ),
@@ -178,43 +186,72 @@ class _TabPickUpPageState extends State<TabPickUpPage> {
                         children: <Widget>[
                           Column(
                             children: <Widget>[
-                              FloatingActionButton.extended(
-                                elevation: 4.0,
-                                backgroundColor: Colors.white,
-                                icon: const Icon(Icons.done, color: Colors.red),
-                                label: Text(
-                                  '${UIData.labelNoLoner}',
-                                  style: new TextStyle(
-                                      fontFamily: 'Quicksand',
-                                      fontSize: 15.0,
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.bold),
+                              Container(
+                                child: StreamBuilder<FetchProcess>(
+                                  stream: pickUpBloc.pickUpDoneResult,
+                                  builder: (context, snapshot) {
+                                    return FloatingActionButton.extended(
+                                      elevation: 4.0,
+                                      backgroundColor: Colors.white,
+                                      icon: const Icon(Icons.block, color: Colors.red),
+                                      label: Text(
+                                        '${UIData.labelNoLoner}',
+                                        style: new TextStyle(
+                                            fontFamily: 'Quicksand',
+                                            fontSize: 15.0,
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      onPressed: () {
+                                        pickUpBloc.pickUpDoneSink.add(
+                                            BikerViewModel.deliveryOption(
+                                                title: UIData.tabPickUp,
+                                                lonerPhone: '0',
+                                                reasonName: UIData.btnDone,
+                                                inquiryNo: pickUpMain.inquiryNo
+                                                    .toString()));
+                                      },
+                                    );
+                                  },
                                 ),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  this.position = position;
-                                },
-                              )
+                              ),
                             ],
                           ),
-                          FloatingActionButton.extended(
-                            elevation: 4.0,
-                            backgroundColor: Colors.white,
-                            icon: const Icon(Icons.phone_android,
-                                color: Colors.green),
-                            label: Text(
-                              '${UIData.labelLoner}',
-                              style: new TextStyle(
-                                  fontFamily: 'Quicksand',
-                                  fontSize: 15.0,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            onPressed: () {
-                              Navigator.pop(context);
-                              this.position = position;
-                            },
-                          )
+
+                          Column(
+                            children: <Widget>[
+                              Container(
+                                child: StreamBuilder<FetchProcess>(
+                                  stream: pickUpBloc.pickUpDoneResult,
+                                  builder: (context, snapshot) {
+                                    return FloatingActionButton.extended(
+                                      elevation: 4.0,
+                                      backgroundColor: Colors.white,
+                                      icon: const Icon(Icons.phone_android,
+                                          color: Colors.green),
+                                      label: Text(
+                                        '${UIData.labelLoner}',
+                                        style: new TextStyle(
+                                            fontFamily: 'Quicksand',
+                                            fontSize: 15.0,
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      onPressed: () {
+                                        pickUpBloc.pickUpDoneSink.add(
+                                            BikerViewModel.deliveryOption(
+                                                title: UIData.tabPickUp,
+                                                lonerPhone: '1',
+                                                reasonName: UIData.btnDone,
+                                                inquiryNo: pickUpMain.inquiryNo
+                                                    .toString()));
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ]),
                   ],
                 ),
@@ -272,9 +309,8 @@ class _TabPickUpPageState extends State<TabPickUpPage> {
     );
 
     if (result != null) {
-      setState(() {
-        position = 0;
-      });
+      pickUpBloc.pickUpRemove(this.position);
+      this.position = null;
     }
   }
 
@@ -305,7 +341,6 @@ class _TabPickUpPageState extends State<TabPickUpPage> {
       new Text(btnName,
           style: new TextStyle(fontSize: 12.0));
 
-//TODO CUSTOM
   expandStyle(int flex, Widget child) =>
       Expanded(
           flex: flex,
